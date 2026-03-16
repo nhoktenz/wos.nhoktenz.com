@@ -59,8 +59,4 @@ This tool is designed for players of Whiteout Survival who need to coordinate mu
 
 ## 📝 License
 
-Free to use for all Whiteout Survival players!
-
----
-
-Made for the Whiteout Survival community ❄️⚔️
+nhoktenz - 2608
