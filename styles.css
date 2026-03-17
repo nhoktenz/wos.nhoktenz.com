@@ -165,6 +165,76 @@ select:focus {
     margin-top: 10px;
 }
 
+.btn-edit {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    padding: 8px 16px;
+    font-size: 0.95em;
+    margin-left: 10px;
+}
+
+.btn-edit:hover {
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-1px);
+}
+
+.result-card .inline-edit-grid {
+    margin-top: 10px;
+}
+
+.result-card .inline-edit-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.result-card .inline-edit-grid label {
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.result-card .inline-edit-grid input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.result-card .inline-edit-grid input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.result-card .inline-edit-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-save-edit {
+    background: rgba(16, 185, 129, 0.22);
+    color: #fff;
+    border: 1px solid rgba(16, 185, 129, 0.7);
+    padding: 9px 18px;
+}
+
+.btn-save-edit:hover {
+    background: rgba(16, 185, 129, 0.34);
+}
+
+.btn-cancel-edit {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fff;
+    border: 1px solid rgba(239, 68, 68, 0.7);
+    padding: 9px 18px;
+}
+
+.btn-cancel-edit:hover {
+    background: rgba(239, 68, 68, 0.34);
+}
+
 .summary {
     background: #e7f3ff;
     border-left: 4px solid #2196F3;

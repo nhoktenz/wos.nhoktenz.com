@@ -88,7 +88,8 @@ function calculateTiming() {
             marchingTime: marchingTime,
             totalTime: totalTime,
             minutes: minutes,
-            seconds: seconds
+            seconds: seconds,
+            inputIndex: i
         });
     }
     
@@ -135,6 +136,7 @@ function displayResults() {
     leaders.forEach((leader, index) => {
         const resultCard = document.createElement('div');
         resultCard.className = index === 0 ? 'result-card first' : 'result-card';
+        resultCard.id = `result-card-${index}`;
         
         let timingText = '';
         if (index === 0) {
@@ -149,6 +151,7 @@ function displayResults() {
             <p><strong>Total Time:</strong> ${formatTime(openRallyTime)} (wait) + ${formatTime(leader.marchingTime)} (march) = ${formatTime(leader.totalTime)}</p>
             ${timingText}
             <span class="badge">Rally Order: #${leader.order}</span>
+            <button onclick="editLeader(${index})" class="btn btn-edit">✏ Edit Leader</button>
         `;
         
         resultsDiv.appendChild(resultCard);
@@ -320,6 +323,94 @@ function renderLeaderStatus() {
             ${startedLeaders.has(i) ? '✅' : '⏳'} ${leader.name}
         </span>`
     ).join('');
+}
+
+function editLeader(resultIndex) {
+    const leader = leaders[resultIndex];
+    const resultCard = document.getElementById(`result-card-${resultIndex}`);
+
+    if (!leader || !resultCard) {
+        return;
+    }
+
+    if (rallyTimer) {
+        cancelCountdown();
+    }
+
+    resultCard.innerHTML = `
+        <h3>Edit ${leader.name}</h3>
+        <div class="inline-edit-grid">
+            <div class="form-group">
+                <label for="editLeaderName${resultIndex}">Leader Name:</label>
+                <input type="text" id="editLeaderName${resultIndex}" value="${leader.name}">
+            </div>
+            <div class="inline-edit-row">
+                <div class="form-group">
+                    <label for="editLeaderMinutes${resultIndex}">Minutes:</label>
+                    <input type="number" id="editLeaderMinutes${resultIndex}" min="0" max="60" value="${leader.minutes}">
+                </div>
+                <div class="form-group">
+                    <label for="editLeaderSeconds${resultIndex}">Seconds:</label>
+                    <input type="number" id="editLeaderSeconds${resultIndex}" min="0" max="59" value="${leader.seconds}">
+                </div>
+            </div>
+        </div>
+        <div class="inline-edit-actions">
+            <button onclick="saveEditedLeader(${resultIndex})" class="btn btn-save-edit">Save</button>
+            <button onclick="cancelEditedLeader()" class="btn btn-cancel-edit">Cancel</button>
+        </div>
+    `;
+}
+
+function saveEditedLeader(resultIndex) {
+    const leader = leaders[resultIndex];
+    if (!leader) {
+        return;
+    }
+
+    const nameInput = document.getElementById(`editLeaderName${resultIndex}`);
+    const minutesInput = document.getElementById(`editLeaderMinutes${resultIndex}`);
+    const secondsInput = document.getElementById(`editLeaderSeconds${resultIndex}`);
+
+    if (!nameInput || !minutesInput || !secondsInput) {
+        return;
+    }
+
+    const newName = nameInput.value.trim() || leader.name;
+    const newMinutes = parseInt(minutesInput.value, 10);
+    const newSeconds = parseInt(secondsInput.value, 10);
+
+    if (
+        Number.isNaN(newMinutes) ||
+        Number.isNaN(newSeconds) ||
+        newMinutes < 0 ||
+        newMinutes > 60 ||
+        newSeconds < 0 ||
+        newSeconds > 59 ||
+        (newMinutes === 0 && newSeconds === 0)
+    ) {
+        alert('Invalid time. Please use 0-60 minutes and 0-59 seconds (not 0:00).');
+        return;
+    }
+
+    const originalIndex = leader.inputIndex;
+    const originalName = document.getElementById(`leader${originalIndex}Name`);
+    const originalMinutes = document.getElementById(`leader${originalIndex}Minutes`);
+    const originalSeconds = document.getElementById(`leader${originalIndex}Seconds`);
+
+    if (!originalName || !originalMinutes || !originalSeconds) {
+        return;
+    }
+
+    originalName.value = newName;
+    originalMinutes.value = newMinutes;
+    originalSeconds.value = newSeconds;
+
+    calculateTiming();
+}
+
+function cancelEditedLeader() {
+    calculateTiming();
 }
 
 function reset() {
