@@ -116,12 +116,27 @@ function displayResults() {
     
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = '';
+
+    const leadersByDelay = new Map();
+    leaders.forEach((leader) => {
+        if (!leadersByDelay.has(leader.delay)) {
+            leadersByDelay.set(leader.delay, []);
+        }
+        leadersByDelay.get(leader.delay).push(leader.name);
+    });
     
     // Add summary
     const summary = document.createElement('div');
     summary.className = 'summary';
     const longestTotalTime = leaders[0].totalTime;
     const longestMarchingTime = leaders[0].marchingTime;
+    const firstStartLeaders = leadersByDelay.get(0) || [leaders[0].name];
+    const firstStartLeadersLabel = firstStartLeaders
+        .map((name) => `<span class="leader-highlight">${name}</span>`)
+        .join(', ');
+    const startHintText = firstStartLeaders.length > 1
+        ? `Press <strong>Start</strong> when ${firstStartLeadersLabel} open their rallies.`
+        : `Press <strong>Start</strong> when ${firstStartLeadersLabel} opens their rally.`;
     summary.innerHTML = `
         <h3>📋 Summary</h3>
         <p><strong>Number of Rally Leaders:</strong> ${numLeaders}</p>
@@ -139,10 +154,19 @@ function displayResults() {
         resultCard.id = `result-card-${index}`;
         
         let timingText = '';
+        const sameTimeLeaders = (leadersByDelay.get(leader.delay) || []).filter((name) => name !== leader.name);
         if (index === 0) {
-            timingText = `<p><strong>Start Rally:</strong> Start NOW! (First to rally)</p>`;
+            if (sameTimeLeaders.length > 0) {
+                timingText = `<p><strong>Start Rally:</strong> Start NOW! (Same time as ${sameTimeLeaders.join(', ')})</p>`;
+            } else {
+                timingText = `<p><strong>Start Rally:</strong> Start NOW! (First to rally)</p>`;
+            }
         } else {
-            timingText = `<p><strong>Start Rally:</strong> Wait ${formatTime(leader.delay)} after ${leaders[0].name} starts</p>`;
+            if (sameTimeLeaders.length > 0) {
+                timingText = `<p><strong>Start Rally:</strong> Start at the same time as ${sameTimeLeaders.join(', ')} (T+${formatTime(leader.delay)})</p>`;
+            } else {
+                timingText = `<p><strong>Start Rally:</strong> Wait ${formatTime(leader.delay)} after ${leaders[0].name} starts</p>`;
+            }
         }
         
         resultCard.innerHTML = `
@@ -162,7 +186,7 @@ function displayResults() {
     countdownPanel.className = 'countdown-panel';
     countdownPanel.innerHTML = `
         <h3>⚔️ Rally Coordination Timer</h3>
-        <p class="countdown-hint">Press <strong>Start</strong> when <span class="leader-highlight">${leaders[0].name}</span> opens their rally.</p>
+        <p class="countdown-hint">${startHintText}</p>
         <div class="timer-controls">
             <button onclick="startCountdown()" id="startBtn" class="btn btn-start">▶ Start Rally</button>
             <button onclick="cancelCountdown()" id="cancelBtn" class="btn btn-cancel" disabled>✖ Cancel Timer</button>
@@ -183,10 +207,14 @@ function displayResults() {
     
     leaders.forEach((leader, index) => {
         const timelineItem = document.createElement('p');
+        const sameTimeLeaders = (leadersByDelay.get(leader.delay) || []).filter((name) => name !== leader.name);
+        const sameTimeText = sameTimeLeaders.length > 0
+            ? ` (same time as ${sameTimeLeaders.join(', ')})`
+            : '';
         if (index === 0) {
-            timelineItem.innerHTML = `<strong>T+0s:</strong> <span class="leader-highlight timeline-leader first-leader">${leader.name}</span> opens rally (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
+            timelineItem.innerHTML = `<strong>T+0s:</strong> <span class="leader-highlight timeline-leader first-leader">${leader.name}</span> opens rally${sameTimeText} (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
         } else {
-            timelineItem.innerHTML = `<strong>T+${formatTime(leader.delay)}:</strong> <span class="leader-highlight timeline-leader">${leader.name}</span> opens rally (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
+            timelineItem.innerHTML = `<strong>T+${formatTime(leader.delay)}:</strong> <span class="leader-highlight timeline-leader">${leader.name}</span> opens rally${sameTimeText} (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
         }
         timeline.appendChild(timelineItem);
     });
@@ -222,22 +250,32 @@ function startCountdown() {
     cancelBtn.disabled = false;
 
     rallyElapsed = 0;
-    startedLeaders = new Set([0]);
+    const zeroDelayIndexes = leaders
+        .map((leader, i) => ({ delay: leader.delay, index: i }))
+        .filter((item) => item.delay === 0)
+        .map((item) => item.index);
+    startedLeaders = new Set(zeroDelayIndexes);
 
     document.getElementById('countdownDisplay').classList.remove('hidden');
-    showLeaderAlert(0);
+    showLeaderAlert(zeroDelayIndexes);
     renderLeaderStatus();
     updateCountdownDisplay();
 
     rallyTimer = setInterval(() => {
         rallyElapsed++;
+        const triggeredIndexes = [];
         leaders.forEach((leader, i) => {
             if (leader.delay === rallyElapsed && !startedLeaders.has(i)) {
                 startedLeaders.add(i);
-                showLeaderAlert(i);
-                renderLeaderStatus();
+                triggeredIndexes.push(i);
             }
         });
+
+        if (triggeredIndexes.length > 0) {
+            showLeaderAlert(triggeredIndexes);
+            renderLeaderStatus();
+        }
+
         updateCountdownDisplay();
     }, 1000);
 }
@@ -273,9 +311,21 @@ function cancelCountdown() {
     statusEl.innerHTML = '';
 }
 
-function showLeaderAlert(index) {
+function showLeaderAlert(indexes) {
+    if (!indexes || indexes.length === 0) {
+        return;
+    }
+
     const alertDiv = document.getElementById('leaderAlert');
-    alertDiv.innerHTML = `🚨 <span class="leader-highlight">${leaders[index].name}</span> — START YOUR RALLY NOW!`;
+    const names = indexes.map((index) => leaders[index].name);
+    const leadersLabel = names
+        .map((name) => `<span class="leader-highlight">${name}</span>`)
+        .join(', ');
+
+    alertDiv.innerHTML = indexes.length === 1
+        ? `🚨 ${leadersLabel} — START YOUR RALLY NOW!`
+        : `🚨 ${leadersLabel} — START YOUR RALLIES NOW!`;
+    alertDiv.classList.remove('fade-out');
     alertDiv.className = 'leader-alert alert-visible';
     setTimeout(() => alertDiv.classList.add('fade-out'), 3000);
 }
@@ -310,7 +360,16 @@ function updateCountdownDisplay() {
     } else {
         const nextLeader = leaders[nextIndex];
         const timeToNext = nextLeader.delay - rallyElapsed;
-        nextEl.innerHTML = `Next: <span class="leader-highlight">${nextLeader.name}</span> starts in:`;
+        const sameDelayNames = leaders
+            .filter((leader, i) => !startedLeaders.has(i) && leader.delay === nextLeader.delay)
+            .map((leader) => leader.name);
+        const nextLabel = sameDelayNames
+            .map((name) => `<span class="leader-highlight">${name}</span>`)
+            .join(', ');
+
+        nextEl.innerHTML = sameDelayNames.length > 1
+            ? `Next: ${nextLabel} start together in:`
+            : `Next: ${nextLabel} starts in:`;
         timerEl.textContent = formatCountdown(timeToNext);
         timerEl.className = 'countdown-timer';
     }
