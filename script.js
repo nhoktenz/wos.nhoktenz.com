@@ -204,6 +204,12 @@ function formatCountdown(seconds) {
 
 function startCountdown() {
     const btn = document.getElementById('startBtn');
+
+    if (rallyTimer) {
+        clearInterval(rallyTimer);
+        rallyTimer = null;
+    }
+
     btn.disabled = true;
     btn.textContent = '⏱️ Running...';
 
@@ -244,9 +250,14 @@ function updateCountdownDisplay() {
         const timeToTarget = leaders[0].totalTime - rallyElapsed;
         if (timeToTarget <= 0) {
             clearInterval(rallyTimer);
+            rallyTimer = null;
             nextEl.innerHTML = '';
             timerEl.innerHTML = '🎯 All rallies hit the target!';
             timerEl.className = 'countdown-timer target-hit';
+
+            const btn = document.getElementById('startBtn');
+            btn.disabled = false;
+            btn.textContent = '🔁 Start Again';
         } else {
             const allMarching = rallyElapsed >= openRallyTime;
             nextEl.innerHTML = allMarching
