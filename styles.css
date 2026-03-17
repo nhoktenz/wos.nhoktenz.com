@@ -133,6 +133,16 @@ select:focus {
     transform: translateY(-2px);
 }
 
+.btn-add {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    color: #fff;
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(22, 163, 74, 0.35);
+}
+
 .result-card {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     color: white;

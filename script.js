@@ -5,6 +5,33 @@ let rallyTimer = null;
 let rallyElapsed = 0;
 let startedLeaders = new Set();
 
+function buildLeaderCard(index) {
+    const leaderCard = document.createElement('div');
+    leaderCard.className = 'leader-card';
+    leaderCard.id = `leader-card-${index}`;
+    leaderCard.innerHTML = `
+        <h3>Rally Leader ${index}</h3>
+        <div class="form-group">
+            <label for="leader${index}Name">Leader Name:</label>
+            <input type="text" id="leader${index}Name" placeholder="Enter leader name" value="Leader ${index}">
+        </div>
+        <div class="form-group">
+            <label>Marching Time to Center/Building:</label>
+            <div class="time-inputs">
+                <div>
+                    <label for="leader${index}Minutes" style="font-size: 0.9em;">Minutes:</label>
+                    <input type="number" id="leader${index}Minutes" min="0" max="60" value="0" placeholder="Minutes">
+                </div>
+                <div>
+                    <label for="leader${index}Seconds" style="font-size: 0.9em;">Seconds:</label>
+                    <input type="number" id="leader${index}Seconds" min="0" max="59" value="0" placeholder="Seconds">
+                </div>
+            </div>
+        </div>
+    `;
+    return leaderCard;
+}
+
 function setupLeaders() {
     numLeaders = parseInt(document.getElementById('numLeaders').value);
     openRallyTime = parseInt(document.getElementById('openRallyTime').value);
@@ -23,29 +50,26 @@ function setupLeaders() {
     leadersInputsDiv.innerHTML = '';
     
     for (let i = 1; i <= numLeaders; i++) {
-        const leaderCard = document.createElement('div');
-        leaderCard.className = 'leader-card';
-        leaderCard.innerHTML = `
-            <h3>Rally Leader ${i}</h3>
-            <div class="form-group">
-                <label for="leader${i}Name">Leader Name:</label>
-                <input type="text" id="leader${i}Name" placeholder="Enter leader name" value="Leader ${i}">
-            </div>
-            <div class="form-group">
-                <label>Marching Time to Center/Building:</label>
-                <div class="time-inputs">
-                    <div>
-                        <label for="leader${i}Minutes" style="font-size: 0.9em;">Minutes:</label>
-                        <input type="number" id="leader${i}Minutes" min="0" max="60" value="0" placeholder="Minutes">
-                    </div>
-                    <div>
-                        <label for="leader${i}Seconds" style="font-size: 0.9em;">Seconds:</label>
-                        <input type="number" id="leader${i}Seconds" min="0" max="59" value="0" placeholder="Seconds">
-                    </div>
-                </div>
-            </div>
-        `;
-        leadersInputsDiv.appendChild(leaderCard);
+        leadersInputsDiv.appendChild(buildLeaderCard(i));
+    }
+}
+
+function addRallyLeader() {
+    if (numLeaders >= 10) {
+        alert('Maximum is 10 rally leaders.');
+        return;
+    }
+
+    numLeaders += 1;
+    document.getElementById('numLeaders').value = numLeaders;
+
+    const leadersInputsDiv = document.getElementById('leadersInputs');
+    leadersInputsDiv.appendChild(buildLeaderCard(numLeaders));
+
+    const newNameInput = document.getElementById(`leader${numLeaders}Name`);
+    if (newNameInput) {
+        newNameInput.focus();
+        newNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 
