@@ -73,6 +73,22 @@ function addRallyLeader() {
     }
 }
 
+function addRallyLeaderFromResults() {
+    if (rallyTimer) {
+        cancelCountdown();
+    }
+
+    const currentCount = numLeaders;
+    addRallyLeader();
+
+    if (numLeaders === currentCount) {
+        return;
+    }
+
+    document.getElementById('results-section').classList.add('hidden');
+    document.getElementById('leaders-section').classList.remove('hidden');
+}
+
 function parseTimeToSeconds(minutes, seconds) {
     return parseInt(minutes) * 60 + parseInt(seconds);
 }
