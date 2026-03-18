@@ -40,6 +40,43 @@ h2 {
     font-size: 1.8em;
 }
 
+.tab-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    flex: 1;
+    min-width: 220px;
+    border: 2px solid #dbe3ff;
+    border-radius: 10px;
+    background: #f8faff;
+    color: #3f4a7a;
+    font-size: 1em;
+    font-weight: 700;
+    padding: 11px 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.tab-btn:hover {
+    border-color: #aebdff;
+    transform: translateY(-1px);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(102, 126, 234, 0.28);
+}
+
+.enemy-summary {
+    margin-bottom: 16px;
+}
+
 .section {
     margin-bottom: 30px;
 }
@@ -501,5 +538,9 @@ select:focus {
     
     .time-inputs {
         grid-template-columns: 1fr;
+    }
+
+    .tab-btn {
+        min-width: 100%;
     }
 }

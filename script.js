@@ -7,26 +7,47 @@ let startedLeaders = new Set();
 let useUtcTimeline = false;
 let utcStartTimeSeconds = null;
 
+function switchTab(tabName) {
+    const coordinatorTab = document.getElementById('coordinator-tab');
+    const enemyTab = document.getElementById('enemy-tab');
+    const coordinatorBtn = document.getElementById('tabCoordinatorBtn');
+    const enemyBtn = document.getElementById('tabEnemyBtn');
+
+    if (!coordinatorTab || !enemyTab || !coordinatorBtn || !enemyBtn) {
+        return;
+    }
+
+    if (tabName !== 'coordinator' && rallyTimer) {
+        cancelCountdown();
+    }
+
+    const showCoordinator = tabName !== 'enemy';
+    coordinatorTab.classList.toggle('hidden', !showCoordinator);
+    enemyTab.classList.toggle('hidden', showCoordinator);
+    coordinatorBtn.classList.toggle('active', showCoordinator);
+    enemyBtn.classList.toggle('active', !showCoordinator);
+}
+
 function buildLeaderCard(index) {
     const leaderCard = document.createElement('div');
     leaderCard.className = 'leader-card';
     leaderCard.id = `leader-card-${index}`;
     leaderCard.innerHTML = `
         <h3>Rally Leader ${index}</h3>
-        <div class="form-group">
-            <label for="leader${index}Name">Leader Name:</label>
-            <input type="text" id="leader${index}Name" placeholder="Enter leader name" required>
+        <div class="form-group mb-3">
+            <label for="leader${index}Name" class="form-label">Leader Name:</label>
+            <input type="text" id="leader${index}Name" class="form-control" placeholder="Enter leader name" required>
         </div>
-        <div class="form-group">
-            <label>Marching Time to Center/Building:</label>
+        <div class="form-group mb-3">
+            <label class="form-label">Marching Time to Center/Building:</label>
             <div class="time-inputs">
                 <div>
-                    <label for="leader${index}Minutes" style="font-size: 0.9em;">Minutes:</label>
-                    <input type="number" id="leader${index}Minutes" min="0" max="60" value="0" placeholder="Minutes">
+                    <label for="leader${index}Minutes" class="form-label" style="font-size: 0.9em;">Minutes:</label>
+                    <input type="number" id="leader${index}Minutes" class="form-control" min="0" max="60" value="0" placeholder="Minutes">
                 </div>
                 <div>
-                    <label for="leader${index}Seconds" style="font-size: 0.9em;">Seconds:</label>
-                    <input type="number" id="leader${index}Seconds" min="0" max="59" value="0" placeholder="Seconds">
+                    <label for="leader${index}Seconds" class="form-label" style="font-size: 0.9em;">Seconds:</label>
+                    <input type="number" id="leader${index}Seconds" class="form-control" min="0" max="59" value="0" placeholder="Seconds">
                 </div>
             </div>
         </div>
@@ -195,6 +216,84 @@ function formatTime(seconds) {
     }
 }
 
+function estimateEnemyHitTime() {
+    const openRallyInput = document.getElementById('enemyOpenRallyTime');
+    const marchMinutesInput = document.getElementById('enemyMarchMinutes');
+    const marchSecondsInput = document.getElementById('enemyMarchSeconds');
+    const startUtcInput = document.getElementById('enemyStartUtc');
+    const resultsDiv = document.getElementById('enemyResults');
+
+    if (!openRallyInput || !marchMinutesInput || !marchSecondsInput || !startUtcInput || !resultsDiv) {
+        return;
+    }
+
+    const openRallySeconds = parseInt(openRallyInput.value, 10) || 0;
+    const marchMinutes = parseInt(marchMinutesInput.value, 10);
+    const marchSecondsValue = parseInt(marchSecondsInput.value, 10);
+
+    if (
+        Number.isNaN(marchMinutes) ||
+        Number.isNaN(marchSecondsValue) ||
+        marchMinutes < 0 ||
+        marchMinutes > 60 ||
+        marchSecondsValue < 0 ||
+        marchSecondsValue > 59 ||
+        (marchMinutes === 0 && marchSecondsValue === 0)
+    ) {
+        alert('Invalid enemy marching time. Please use 0-60 minutes and 0-59 seconds (not 0:00).');
+        return;
+    }
+
+    const marchingSeconds = parseTimeToSeconds(marchMinutes, marchSecondsValue);
+    const totalToHitSeconds = openRallySeconds + marchingSeconds;
+    const startUtcText = startUtcInput.value.trim();
+
+    let utcEstimateHtml = '';
+    if (startUtcText) {
+        const parsedStart = parseUtcClockToSeconds(startUtcText);
+        if (parsedStart === null) {
+            alert('Please enter enemy start UTC in 24-hour format (HH:MM or HH:MM:SS).');
+            return;
+        }
+
+        const hitUtc = formatUtcClock(parsedStart + totalToHitSeconds);
+        utcEstimateHtml = `<p><strong>Estimated Hit Clock Time:</strong> ${hitUtc} UTC</p>`;
+    }
+
+    resultsDiv.innerHTML = `
+        <h3>Enemy Hit Estimate</h3>
+        <p><strong>Total Time To Hit Building:</strong> ${formatTime(totalToHitSeconds)}</p>
+        <p><strong>Breakdown:</strong> ${formatTime(openRallySeconds)} (open) + ${formatTime(marchingSeconds)} (march)</p>
+        ${utcEstimateHtml}
+    `;
+    resultsDiv.classList.remove('hidden');
+}
+
+function clearEnemyEstimate() {
+    const openRallyInput = document.getElementById('enemyOpenRallyTime');
+    const marchMinutesInput = document.getElementById('enemyMarchMinutes');
+    const marchSecondsInput = document.getElementById('enemyMarchSeconds');
+    const startUtcInput = document.getElementById('enemyStartUtc');
+    const resultsDiv = document.getElementById('enemyResults');
+
+    if (openRallyInput) {
+        openRallyInput.value = '60';
+    }
+    if (marchMinutesInput) {
+        marchMinutesInput.value = '0';
+    }
+    if (marchSecondsInput) {
+        marchSecondsInput.value = '0';
+    }
+    if (startUtcInput) {
+        startUtcInput.value = '';
+    }
+    if (resultsDiv) {
+        resultsDiv.innerHTML = '';
+        resultsDiv.classList.add('hidden');
+    }
+}
+
 function calculateTiming() {
     leaders = [];
     
@@ -318,7 +417,7 @@ function displayResults() {
     });
 
     const resultsActions = document.createElement('div');
-    resultsActions.className = 'results-actions mb-3';
+    resultsActions.className = 'results-actions d-flex flex-wrap gap-2 mb-3';
     resultsActions.innerHTML = '<button onclick="addRallyLeaderFromResults()" class="btn btn-add">+ Add Rally Leader</button>';
     resultsDiv.appendChild(resultsActions);
     
@@ -346,15 +445,15 @@ function displayResults() {
     utcControls.className = 'summary utc-results-panel';
     utcControls.innerHTML = `
         <h3>UTC Timeline</h3>
-        <div class="form-group utc-option-group">
-            <div class="utc-option-row">
-                <input type="checkbox" id="useUtcTimeline" onchange="toggleUtcTimeInput()">
-                <label for="useUtcTimeline" class="utc-checkbox-label">Use UTC time in Execution Timeline</label>
+        <div class="form-group utc-option-group mb-3">
+            <div class="utc-option-row form-check">
+                <input type="checkbox" id="useUtcTimeline" class="form-check-input" onchange="toggleUtcTimeInput()">
+                <label for="useUtcTimeline" class="form-check-label utc-checkbox-label">Use UTC time in Execution Timeline</label>
             </div>
         </div>
         <div class="form-group utc-time-row">
-            <label for="utcStartTime">T (UTC Start Time):</label>
-            <input type="text" id="utcStartTime" value="00:00:00" placeholder="HH:MM or HH:MM:SS (24-hour)" inputmode="numeric" autocomplete="off" disabled>
+            <label for="utcStartTime" class="form-label">T (UTC Start Time):</label>
+            <input type="text" id="utcStartTime" class="form-control" value="00:00:00" placeholder="HH:MM or HH:MM:SS (24-hour)" inputmode="numeric" autocomplete="off" disabled>
             <small class="utc-help">Use 24-hour UTC format (example: 13:45 or 13:45:00), then click Apply UTC.</small>
         </div>
         <button onclick="applyUtcTimelineFromResults()" class="btn btn-primary utc-apply-btn">Apply UTC</button>
@@ -564,18 +663,18 @@ function editLeader(resultIndex) {
     resultCard.innerHTML = `
         <h3>Edit ${leader.name}</h3>
         <div class="inline-edit-grid">
-            <div class="form-group">
-                <label for="editLeaderName${resultIndex}">Leader Name:</label>
-                <input type="text" id="editLeaderName${resultIndex}" value="${leader.name}" required>
+            <div class="form-group mb-3">
+                <label for="editLeaderName${resultIndex}" class="form-label">Leader Name:</label>
+                <input type="text" id="editLeaderName${resultIndex}" class="form-control" value="${leader.name}" required>
             </div>
             <div class="inline-edit-row">
                 <div class="form-group">
-                    <label for="editLeaderMinutes${resultIndex}">Minutes:</label>
-                    <input type="number" id="editLeaderMinutes${resultIndex}" min="0" max="60" value="${leader.minutes}">
+                    <label for="editLeaderMinutes${resultIndex}" class="form-label">Minutes:</label>
+                    <input type="number" id="editLeaderMinutes${resultIndex}" class="form-control" min="0" max="60" value="${leader.minutes}">
                 </div>
                 <div class="form-group">
-                    <label for="editLeaderSeconds${resultIndex}">Seconds:</label>
-                    <input type="number" id="editLeaderSeconds${resultIndex}" min="0" max="59" value="${leader.seconds}">
+                    <label for="editLeaderSeconds${resultIndex}" class="form-label">Seconds:</label>
+                    <input type="number" id="editLeaderSeconds${resultIndex}" class="form-control" min="0" max="59" value="${leader.seconds}">
                 </div>
             </div>
         </div>
@@ -668,6 +767,8 @@ function reset() {
         utcStartTimeInput.value = '00:00:00';
     }
     toggleUtcTimeInput();
+    clearEnemyEstimate();
+    switchTab('coordinator');
     
     // Show setup section and hide others
     document.getElementById('setup-section').classList.remove('hidden');
@@ -676,3 +777,5 @@ function reset() {
 }
 
 toggleUtcTimeInput();
+clearEnemyEstimate();
+switchTab('coordinator');
