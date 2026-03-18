@@ -178,7 +178,7 @@ function displayResults() {
     const longestMarchingTime = leaders[0].marchingTime;
     const firstStartLeaders = leadersByDelay.get(0) || [leaders[0].name];
     const firstStartLeadersLabel = firstStartLeaders
-        .map((name) => `<span class="leader-highlight">${name}</span>`)
+        .map((name) => `<span class="leader-highlight first-leader">${name}</span>`)
         .join(', ');
     const startHintText = firstStartLeaders.length > 1
         ? `Press <strong>Start</strong> when ${firstStartLeadersLabel} open their rallies.`
@@ -187,8 +187,8 @@ function displayResults() {
         <h3>📋 Summary</h3>
         <p><strong>Number of Rally Leaders:</strong> ${numLeaders}</p>
         <p><strong>Open Rally Time (waiting period):</strong> ${formatTime(openRallyTime)}</p>
-        <p><strong>Longest Marching Time:</strong> ${formatTime(longestMarchingTime)} <span class="leader-highlight">${leaders[0].name}</span></p>
-        <p><strong>Longest Total Time:</strong> ${formatTime(longestTotalTime)} <span class="leader-highlight">${leaders[0].name}</span></p>
+        <p><strong>Longest Marching Time:</strong> ${formatTime(longestMarchingTime)} <span class="leader-highlight first-leader">${leaders[0].name}</span></p>
+        <p><strong>Longest Total Time:</strong> ${formatTime(longestTotalTime)} <span class="leader-highlight first-leader">${leaders[0].name}</span></p>
         <p><strong>All rallies will hit the target at the same time!</strong></p>
     `;
     resultsDiv.appendChild(summary);
