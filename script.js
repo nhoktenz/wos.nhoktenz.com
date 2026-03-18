@@ -13,7 +13,7 @@ function buildLeaderCard(index) {
         <h3>Rally Leader ${index}</h3>
         <div class="form-group">
             <label for="leader${index}Name">Leader Name:</label>
-            <input type="text" id="leader${index}Name" placeholder="Enter leader name" value="Leader ${index}">
+            <input type="text" id="leader${index}Name" placeholder="Enter leader name" required>
         </div>
         <div class="form-group">
             <label>Marching Time to Center/Building:</label>
@@ -94,7 +94,13 @@ function calculateTiming() {
     
     // Collect all leader data
     for (let i = 1; i <= numLeaders; i++) {
-        const name = document.getElementById(`leader${i}Name`).value || `Leader ${i}`;
+        const name = document.getElementById(`leader${i}Name`).value.trim();
+
+        if (!name) {
+            alert(`Please enter a leader name for Rally Leader ${i}!`);
+            return;
+        }
+
         const minutes = parseInt(document.getElementById(`leader${i}Minutes`).value) || 0;
         const seconds = parseInt(document.getElementById(`leader${i}Seconds`).value) || 0;
         const marchingTime = parseTimeToSeconds(minutes, seconds);
@@ -425,7 +431,7 @@ function editLeader(resultIndex) {
         <div class="inline-edit-grid">
             <div class="form-group">
                 <label for="editLeaderName${resultIndex}">Leader Name:</label>
-                <input type="text" id="editLeaderName${resultIndex}" value="${leader.name}">
+                <input type="text" id="editLeaderName${resultIndex}" value="${leader.name}" required>
             </div>
             <div class="inline-edit-row">
                 <div class="form-group">
@@ -459,9 +465,14 @@ function saveEditedLeader(resultIndex) {
         return;
     }
 
-    const newName = nameInput.value.trim() || leader.name;
+    const newName = nameInput.value.trim();
     const newMinutes = parseInt(minutesInput.value, 10);
     const newSeconds = parseInt(secondsInput.value, 10);
+
+    if (!newName) {
+        alert('Leader name is required.');
+        return;
+    }
 
     if (
         Number.isNaN(newMinutes) ||
