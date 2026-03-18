@@ -4,6 +4,8 @@ let leaders = [];
 let rallyTimer = null;
 let rallyElapsed = 0;
 let startedLeaders = new Set();
+let useUtcTimeline = false;
+let utcStartTimeSeconds = null;
 
 function buildLeaderCard(index) {
     const leaderCard = document.createElement('div');
@@ -91,6 +93,94 @@ function addRallyLeaderFromResults() {
 
 function parseTimeToSeconds(minutes, seconds) {
     return parseInt(minutes) * 60 + parseInt(seconds);
+}
+
+function parseUtcClockToSeconds(timeText) {
+    if (!timeText) {
+        return null;
+    }
+
+    const trimmed = timeText.trim();
+    const match = trimmed.match(/^([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/);
+    if (!match) {
+        return null;
+    }
+
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const seconds = match[3] ? parseInt(match[3], 10) : 0;
+
+    return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+function formatUtcClock(totalSeconds) {
+    const normalized = ((totalSeconds % 86400) + 86400) % 86400;
+    const hours = Math.floor(normalized / 3600);
+    const minutes = Math.floor((normalized % 3600) / 60);
+    const seconds = normalized % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatTimelineLabel(offsetSeconds) {
+    if (!useUtcTimeline || utcStartTimeSeconds === null) {
+        return `T+${formatTime(offsetSeconds)}`;
+    }
+
+    return `${formatUtcClock(utcStartTimeSeconds + offsetSeconds)} UTC (T+${formatTime(offsetSeconds)})`;
+}
+
+function toggleUtcTimeInput() {
+    const useUtcCheckbox = document.getElementById('useUtcTimeline');
+    const utcStartTimeInput = document.getElementById('utcStartTime');
+
+    if (!useUtcCheckbox || !utcStartTimeInput) {
+        return;
+    }
+
+    utcStartTimeInput.disabled = !useUtcCheckbox.checked;
+    if (useUtcCheckbox.checked && !utcStartTimeInput.value) {
+        utcStartTimeInput.value = '00:00:00';
+    }
+}
+
+function syncUtcControlsFromState() {
+    const useUtcCheckbox = document.getElementById('useUtcTimeline');
+    const utcStartTimeInput = document.getElementById('utcStartTime');
+
+    if (!useUtcCheckbox || !utcStartTimeInput) {
+        return;
+    }
+
+    useUtcCheckbox.checked = useUtcTimeline;
+    utcStartTimeInput.value = formatUtcClock(utcStartTimeSeconds === null ? 0 : utcStartTimeSeconds);
+    toggleUtcTimeInput();
+}
+
+function applyUtcTimelineFromResults() {
+    const useUtcCheckbox = document.getElementById('useUtcTimeline');
+    const utcStartTimeInput = document.getElementById('utcStartTime');
+
+    if (!useUtcCheckbox || !utcStartTimeInput) {
+        return;
+    }
+
+    useUtcTimeline = useUtcCheckbox.checked;
+    if (useUtcTimeline) {
+        const parsedUtcStart = parseUtcClockToSeconds(utcStartTimeInput.value);
+        if (parsedUtcStart === null) {
+            alert('Please enter a valid UTC start time in 24-hour format (HH:MM or HH:MM:SS). Do not use AM/PM.');
+            return;
+        }
+        utcStartTimeSeconds = parsedUtcStart;
+    } else {
+        utcStartTimeSeconds = null;
+    }
+
+    if (rallyTimer) {
+        cancelCountdown();
+    }
+
+    displayResults();
 }
 
 function formatTime(seconds) {
@@ -251,27 +341,51 @@ function displayResults() {
     `;
     resultsDiv.appendChild(countdownPanel);
 
+    // Add UTC controls right before execution timeline
+    const utcControls = document.createElement('div');
+    utcControls.className = 'summary utc-results-panel';
+    utcControls.innerHTML = `
+        <h3>UTC Timeline</h3>
+        <div class="form-group utc-option-group">
+            <div class="utc-option-row">
+                <input type="checkbox" id="useUtcTimeline" onchange="toggleUtcTimeInput()">
+                <label for="useUtcTimeline" class="utc-checkbox-label">Use UTC time in Execution Timeline</label>
+            </div>
+        </div>
+        <div class="form-group utc-time-row">
+            <label for="utcStartTime">T (UTC Start Time):</label>
+            <input type="text" id="utcStartTime" value="00:00:00" placeholder="HH:MM or HH:MM:SS (24-hour)" inputmode="numeric" autocomplete="off" disabled>
+            <small class="utc-help">Use 24-hour UTC format (example: 13:45 or 13:45:00), then click Apply UTC.</small>
+        </div>
+        <button onclick="applyUtcTimelineFromResults()" class="btn btn-primary utc-apply-btn">Apply UTC</button>
+    `;
+    resultsDiv.appendChild(utcControls);
+    syncUtcControlsFromState();
+
     // Add execution timeline
     const timeline = document.createElement('div');
     timeline.className = 'summary';
-    timeline.innerHTML = '<h3>⏱️ Execution Timeline</h3>';
+    timeline.innerHTML = useUtcTimeline
+        ? '<h3>⏱️ Execution Timeline (UTC)</h3>'
+        : '<h3>⏱️ Execution Timeline</h3>';
     
     leaders.forEach((leader, index) => {
         const timelineItem = document.createElement('p');
+        const timelineLabel = formatTimelineLabel(leader.delay);
         const sameTimeLeaders = (leadersByDelay.get(leader.delay) || []).filter((name) => name !== leader.name);
         const sameTimeText = sameTimeLeaders.length > 0
             ? ` (same time as ${sameTimeLeaders.join(', ')})`
             : '';
         if (index === 0) {
-            timelineItem.innerHTML = `<strong>T+0s:</strong> <span class="leader-highlight timeline-leader first-leader">${leader.name}</span> opens rally${sameTimeText} (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
+            timelineItem.innerHTML = `<strong>${timelineLabel}:</strong> <span class="leader-highlight timeline-leader first-leader">${leader.name}</span> opens rally${sameTimeText} (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
         } else {
-            timelineItem.innerHTML = `<strong>T+${formatTime(leader.delay)}:</strong> <span class="leader-highlight timeline-leader">${leader.name}</span> opens rally${sameTimeText} (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
+            timelineItem.innerHTML = `<strong>${timelineLabel}:</strong> <span class="leader-highlight timeline-leader">${leader.name}</span> opens rally${sameTimeText} (waits ${formatTime(openRallyTime)}, then marches ${formatTime(leader.marchingTime)})`;
         }
         timeline.appendChild(timelineItem);
     });
     
     const hitTime = document.createElement('p');
-    hitTime.innerHTML = `<strong>T+${formatTime(longestTotalTime)}:</strong> 🎯 All rallies hit the target simultaneously!`;
+    hitTime.innerHTML = `<strong>${formatTimelineLabel(longestTotalTime)}:</strong> 🎯 All rallies hit the target simultaneously!`;
     hitTime.style.color = '#4CAF50';
     hitTime.style.fontWeight = 'bold';
     hitTime.style.fontSize = '1.2em';
@@ -539,13 +653,26 @@ function reset() {
     numLeaders = 0;
     openRallyTime = 0;
     leaders = [];
+    useUtcTimeline = false;
+    utcStartTimeSeconds = null;
     
     // Reset form
     document.getElementById('numLeaders').value = 2;
     document.getElementById('openRallyTime').value = 60;
+    const useUtcCheckbox = document.getElementById('useUtcTimeline');
+    const utcStartTimeInput = document.getElementById('utcStartTime');
+    if (useUtcCheckbox) {
+        useUtcCheckbox.checked = false;
+    }
+    if (utcStartTimeInput) {
+        utcStartTimeInput.value = '00:00:00';
+    }
+    toggleUtcTimeInput();
     
     // Show setup section and hide others
     document.getElementById('setup-section').classList.remove('hidden');
     document.getElementById('leaders-section').classList.add('hidden');
     document.getElementById('results-section').classList.add('hidden');
 }
+
+toggleUtcTimeInput();
