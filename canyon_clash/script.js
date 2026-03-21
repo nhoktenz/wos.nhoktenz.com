@@ -87,8 +87,8 @@ function editPlayer(index) {
         <div class="player-inline-edit">
             <input type="text" id="edit-name-${index}" value="${player.name}" placeholder="Name">
             <input type="number" id="edit-power-${index}" value="${player.power}" min="1" placeholder="Power">
-            <button onclick="savePlayer(${index})" class="btn btn-save-player">Save</button>
-            <button onclick="renderPlayersList()" class="btn btn-cancel-player">Cancel</button>
+            <button onclick="savePlayer(${index})" class="btn btn-sm btn-success">Save</button>
+            <button onclick="renderPlayersList()" class="btn btn-sm btn-outline-secondary">Cancel</button>
         </div>
     `;
     document.getElementById(`edit-name-${index}`).focus();
@@ -128,8 +128,8 @@ function renderPlayersList() {
         `<div class="player-item" id="player-item-${index}">
             <span class="player-info"><strong>${player.name}</strong> - Power: <span class="power-badge">${player.power}</span></span>
             <div class="player-item-actions">
-                <button onclick="editPlayer(${index})" class="btn btn-edit-player">✏</button>
-                <button onclick="removePlayer(${index})" class="btn btn-remove">✕</button>
+                <button onclick="editPlayer(${index})" class="btn btn-sm btn-outline-primary">✏</button>
+                <button onclick="removePlayer(${index})" class="btn btn-sm btn-outline-danger">✕</button>
             </div>
         </div>`
     ).join('');
