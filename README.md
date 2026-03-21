@@ -1,6 +1,6 @@
 # Whiteout Survival Tools
 
-This repository contains web tools for Whiteout Survival coordination.
+This project contains web tools for Whiteout Survival game.
 
 ## Live Pages
 
@@ -10,8 +10,6 @@ This repository contains web tools for Whiteout Survival coordination.
 ## Apps
 
 ### Rally Coordinator
-
-Path: `rally/`
 
 What it includes:
 - Multi-leader rally timing (2-10 leaders)
@@ -26,13 +24,14 @@ App docs:
 
 ### Canyon Clash Team Divider
 
-Path: `canyon_clash/`
-
 What it includes:
 - Player name + power input
 - Live total member count and total power
 - Auto-balancing into 3 teams
 - Team cards with member lists and power summaries
+
+App docs:
+- [canyon_clash/README.md](canyon_clash/README.md)
 
 ## Support
 
