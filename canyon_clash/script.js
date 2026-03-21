@@ -40,6 +40,37 @@ function removePlayer(index) {
     updateDivideButton();
 }
 
+function editPlayer(index) {
+    const player = players[index];
+    const itemDiv = document.getElementById(`player-item-${index}`);
+    if (!itemDiv) return;
+
+    itemDiv.innerHTML = `
+        <div class="player-inline-edit">
+            <input type="text" id="edit-name-${index}" value="${player.name}" placeholder="Name">
+            <input type="number" id="edit-power-${index}" value="${player.power}" min="1" placeholder="Power">
+            <button onclick="savePlayer(${index})" class="btn btn-save-player">Save</button>
+            <button onclick="renderPlayersList()" class="btn btn-cancel-player">Cancel</button>
+        </div>
+    `;
+    document.getElementById(`edit-name-${index}`).focus();
+}
+
+function savePlayer(index) {
+    const nameInput = document.getElementById(`edit-name-${index}`);
+    const powerInput = document.getElementById(`edit-power-${index}`);
+
+    const name = nameInput.value.trim();
+    const power = parseInt(powerInput.value, 10);
+
+    if (!name) { alert('Name cannot be empty!'); return; }
+    if (!power || power < 1) { alert('Please enter a valid power (1 or higher)!'); return; }
+
+    players[index] = { name, power };
+    renderPlayersList();
+    updateDivideButton();
+}
+
 function renderPlayersList() {
     const listDiv = document.getElementById('playersList');
     const stats = getOverallStats();
@@ -56,9 +87,12 @@ function renderPlayersList() {
     }
     
     listDiv.innerHTML = `${statsHtml}<h3>Players Added:</h3>` + players.map((player, index) =>
-        `<div class="player-item">
+        `<div class="player-item" id="player-item-${index}">
             <span class="player-info"><strong>${player.name}</strong> - Power: <span class="power-badge">${player.power}</span></span>
-            <button onclick="removePlayer(${index})" class="btn btn-remove">✕</button>
+            <div class="player-item-actions">
+                <button onclick="editPlayer(${index})" class="btn btn-edit-player">✏</button>
+                <button onclick="removePlayer(${index})" class="btn btn-remove">✕</button>
+            </div>
         </div>`
     ).join('');
 }
@@ -127,6 +161,13 @@ function displayTeams(teams) {
             </div>
         </div>`
     ).join('');
+}
+
+function editPlayerList() {
+    document.getElementById('results-section').classList.add('hidden');
+    document.getElementById('input-section').classList.remove('hidden');
+    renderPlayersList();
+    updateDivideButton();
 }
 
 function downloadResults() {
