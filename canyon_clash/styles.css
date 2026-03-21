@@ -296,6 +296,11 @@ input[type="number"]:focus {
     font-size: 0.95em;
 }
 
+.footer strong {
+    color: #667eea;
+    font-size: 1.1em;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 20px;
