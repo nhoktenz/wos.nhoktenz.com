@@ -15,10 +15,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏜️ Canyon Clash Team Divider</h1>
-        <p class="subtitle">Input players and auto-divide into 3 equal teams!</p>
+        <h1>🏜️Team Divider</h1>
+        <p class="subtitle">Input players and auto-divide into X balanced teams!</p>
         
-        <div id="input-section" class="section">
+        <div id="input-section" class="section">            
+            <div class="team-config-row">
+                <div class="form-group team-count-group">
+                    <label for="teamCount">Number of Teams:</label>
+                    <input type="number" id="teamCount" placeholder="Teams" min="2" value="3" onchange="updateDivideButton()">
+                </div>
+            </div>
             <h2>Add Players</h2>
             <div class="player-input-group">
                 <div class="form-group">

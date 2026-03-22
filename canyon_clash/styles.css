@@ -90,6 +90,14 @@ input[type="number"]:focus {
     margin-bottom: 20px;
 }
 
+.team-config-row {
+    margin-bottom: 8px;
+}
+
+.team-count-group {
+    max-width: 220px;
+}
+
 
 .player-item-actions {
     display: flex;
