@@ -8,16 +8,16 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 24px;
+    padding: 16px;
 }
 
 .container {
-    width: min(100%, 390px);
+    width: min(100%, 1400px);
     margin: 0 auto;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    padding: 20px;
+    padding: 22px;
 }
 
 h1 {
@@ -29,11 +29,20 @@ h1 {
 h2 {
     color: #334155;
     font-size: 1rem;
-    margin: 10px 0 8px;
+    margin: 0;
+}
+
+.clips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
 }
 
 .clip-item {
-    margin-bottom: 14px;
+    border: 1px solid #dbe3ff;
+    border-radius: 10px;
+    background: #f8fbff;
+    padding: 10px;
 }
 
 .clip-item-header {
@@ -41,6 +50,7 @@ h2 {
     justify-content: space-between;
     align-items: center;
     gap: 10px;
+    margin-bottom: 8px;
 }
 
 .copy-btn {
@@ -59,16 +69,18 @@ h2 {
 }
 
 .clip-art {
-    background: #f8fbff;
+    background: #ffffff;
     border: 1px solid #d7e4ff;
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
     overflow-x: auto;
+    overflow-y: auto;
     white-space: pre;
     line-height: 1.06;
     font-size: 0.9rem;
     font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI', sans-serif;
     user-select: text;
+    max-height: 320px;
 }
 
 #art-bear {
@@ -87,9 +99,14 @@ h2 {
         padding: 14px;
     }
 
+    .clips-grid {
+        grid-template-columns: 1fr;
+    }
+
     .clip-art {
         font-size: 0.78rem;
         line-height: 1.02;
+        max-height: 280px;
     }
 
     #art-bear {
