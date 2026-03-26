@@ -394,6 +394,35 @@ function collectEnemyRallyEntries() {
     return entries;
 }
 
+function collectMyMarchInfo() {
+    const myMarchMinutesInput = document.getElementById('myMarchMinutes');
+    const myMarchSecondsInput = document.getElementById('myMarchSeconds');
+
+    if (!myMarchMinutesInput || !myMarchSecondsInput) {
+        return null;
+    }
+
+    const myMarchMinutes = parseInt(myMarchMinutesInput.value, 10);
+    const myMarchSeconds = parseInt(myMarchSecondsInput.value, 10);
+
+    if (
+        Number.isNaN(myMarchMinutes) ||
+        Number.isNaN(myMarchSeconds) ||
+        myMarchMinutes < 0 ||
+        myMarchMinutes > 60 ||
+        myMarchSeconds < 0 ||
+        myMarchSeconds > 59 ||
+        (myMarchMinutes === 0 && myMarchSeconds === 0)
+    ) {
+        alert('Invalid my marching time. Please use 0-60 minutes and 0-59 seconds (not 0:00).');
+        return null;
+    }
+
+    return {
+        myMarchSeconds: parseTimeToSeconds(myMarchMinutes, myMarchSeconds)
+    };
+}
+
 function estimateEnemyHitTime() {
     const resultsDiv = document.getElementById('enemyResults');
 
@@ -406,10 +435,48 @@ function estimateEnemyHitTime() {
         return;
     }
 
+    const myMarchInfo = collectMyMarchInfo();
+    if (!myMarchInfo) {
+        return;
+    }
+
     const sortedByDuration = [...entries].sort((a, b) => a.totalToHitSeconds - b.totalToHitSeconds);
     const sortedByUtcHit = entries
         .filter((entry) => entry.hitUtcSeconds !== null)
         .sort((a, b) => a.hitUtcSeconds - b.hitUtcSeconds);
+    const firstIncomingEntry = sortedByUtcHit.length > 0 ? sortedByUtcHit[0] : sortedByDuration[0];
+    const sendOffsetFromEnemyOpen = firstIncomingEntry.totalToHitSeconds - myMarchInfo.myMarchSeconds + 1;
+    const highlightedEnemyLabel = `<span class="enemy-target-highlight">${firstIncomingEntry.label}</span>`;
+
+    let myMarchHtml = `
+        <div class="enemy-my-march-card">
+            <h3>My Send Recommendation</h3>
+            <p><strong>My March Time:</strong> ${formatTime(myMarchInfo.myMarchSeconds)}</p>
+            <p><strong>Target Rally:</strong> ${highlightedEnemyLabel}</p>
+            <p><strong>Goal:</strong> Arrive 1 second after the first enemy hit.</p>
+            <p><strong>Send Lead Time Before Hit:</strong> ${formatTime(Math.max(myMarchInfo.myMarchSeconds - 1, 0))}</p>
+        `;
+
+    if (firstIncomingEntry.hitUtcSeconds !== null) {
+        const recommendedArrivalUtc = firstIncomingEntry.hitUtcSeconds + 1;
+        const recommendedSendUtc = recommendedArrivalUtc - myMarchInfo.myMarchSeconds;
+        myMarchHtml += `
+            <p><strong>Recommended Arrival:</strong> ${formatUtcClock(recommendedArrivalUtc)} UTC</p>
+            <p><strong>Recommended Send Time:</strong> <span class="send-time-highlight">${formatUtcClock(recommendedSendUtc)} UTC</span></p>
+        `;
+    } else if (sendOffsetFromEnemyOpen > 0) {
+        myMarchHtml += `<p><strong>Recommended Send Timing:</strong> Send <span class="send-time-highlight">${formatTime(sendOffsetFromEnemyOpen)}</span> after ${highlightedEnemyLabel} opens.</p>`;
+    } else if (sendOffsetFromEnemyOpen === 0) {
+        myMarchHtml += `<p><strong>Recommended Send Timing:</strong> Send <span class="send-time-highlight">immediately</span> when ${highlightedEnemyLabel} opens.</p>`;
+    } else {
+        myMarchHtml += `<p><strong>Recommended Send Timing:</strong> You would need to send <span class="send-time-highlight">${formatTime(Math.abs(sendOffsetFromEnemyOpen))} before</span> ${highlightedEnemyLabel} opens.</p>`;
+    }
+
+    if (sendOffsetFromEnemyOpen >= 0) {
+        myMarchHtml += `<p><strong>Relative Check:</strong> Send <span class="send-time-highlight">${formatTime(sendOffsetFromEnemyOpen)}</span> after ${highlightedEnemyLabel} opens, then your march lands 1 second after impact.</p>`;
+    }
+
+    myMarchHtml += '</div>';
 
     const resultCardsHtml = sortedByDuration.map((entry) => {
         const utcEstimateHtml = entry.hitUtcSeconds === null
@@ -439,6 +506,7 @@ function estimateEnemyHitTime() {
     resultsDiv.innerHTML = `
         <h3>Enemy Hit Estimate</h3>
         ${summaryHtml}
+        ${myMarchHtml}
         <div class="enemy-result-grid">${resultCardsHtml}</div>
     `;
     resultsDiv.classList.remove('hidden');
@@ -448,6 +516,15 @@ function clearEnemyEstimate() {
     enemyRallyCount = 1;
     renderEnemyRallyInputs();
     const resultsDiv = document.getElementById('enemyResults');
+    const myMarchMinutesInput = document.getElementById('myMarchMinutes');
+    const myMarchSecondsInput = document.getElementById('myMarchSeconds');
+
+    if (myMarchMinutesInput) {
+        myMarchMinutesInput.value = '0';
+    }
+    if (myMarchSecondsInput) {
+        myMarchSecondsInput.value = '0';
+    }
 
     if (resultsDiv) {
         resultsDiv.innerHTML = '';

@@ -77,6 +77,24 @@
 
                 <div id="enemyRallyInputs"></div>
 
+                <div class="summary my-march-summary">
+                    <h3>🛡️ My March Timing</h3>
+                    <div class="form-group mb-0">
+                        <label class="form-label">My Marching Time to Building:</label>
+                        <div class="time-inputs">
+                            <div>
+                                <label for="myMarchMinutes" class="form-label enemy-time-label">Minutes:</label>
+                                <input type="number" id="myMarchMinutes" class="form-control" min="0" max="60" value="0" placeholder="Minutes">
+                            </div>
+                            <div>
+                                <label for="myMarchSeconds" class="form-label enemy-time-label">Seconds:</label>
+                                <input type="number" id="myMarchSeconds" class="form-control" min="0" max="59" value="0" placeholder="Seconds">
+                            </div>
+                        </div>
+                        <small class="utc-help">Recommendation will target arriving 1 second after the earliest enemy rally hits.</small>
+                    </div>
+                </div>
+
                 <div class="d-flex flex-wrap gap-2">
                     <button onclick="addEnemyRallyInput()" class="btn btn-add">+ Add Enemy Rally</button>
                     <button onclick="estimateEnemyHitTime()" class="btn btn-primary">Estimate Hit Time</button>

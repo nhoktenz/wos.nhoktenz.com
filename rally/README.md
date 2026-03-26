@@ -15,6 +15,7 @@ Rally timing tool for Whiteout Survival to make multiple leaders hit the target 
 - Handles same-start leaders (tie timing)
 - Edit leader card directly from results
 - Enemy hit estimator tab with multiple enemy rallies and per-rally UTC input
+- My march timing recommendation to arrive 1 second after the first enemy hit
 - Optional UTC time support
 
 ## How It Works
