@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WOS Player Lookup</title>
+</head>
+<body>
+  <h2>WOS Player Lookup</h2>
+
+  <input id="playerId" placeholder="Enter Player ID" />
+  <button onclick="lookupPlayer()">Submit</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function lookupPlayer() {
+      const fid = document.getElementById("playerId").value.trim();
+      const result = document.getElementById("result");
+
+      result.innerHTML = "Loading...";
+
+      const res = await fetch("https://wos-api.vercel.app/api/player", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ fid })
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        result.innerHTML = `<p style="color:red;">${data.error}</p>`;
+        return;
+      }
+
+      const furnaceDisplay = data.furnace.startsWith("http")
+        ? `<img src="${data.furnace}" width="80" />`
+        : data.furnace;
+
+      result.innerHTML = `
+        <p><b>Name:</b> ${data.name}</p>
+        <p><b>State:</b> ${data.state}</p>
+        <p><b>Furnace:</b> ${furnaceDisplay}</p>
+      `;
+    }
+  </script>
+</body>
+</html>
