@@ -33,15 +33,27 @@
         return;
       }
 
-      const furnaceDisplay = data.furnace.startsWith("http")
-        ? `<img src="${data.furnace}" width="80" />`
-        : data.furnace;
+      const player = data.data;
 
-      result.innerHTML = `
-        <p><b>Name:</b> ${data.name}</p>
-        <p><b>State:</b> ${data.state}</p>
-        <p><b>Furnace:</b> ${furnaceDisplay}</p>
-      `;
+    if (!player) {
+    result.innerHTML = `<p style="color:red;">Player not found</p>`;
+    return;
+    }
+
+    const furnaceDisplay = player.stove_lv_content?.startsWith("http")
+    ? `<img src="${player.stove_lv_content}" width="80" />`
+    : player.stove_lv_content || "";
+
+   result.innerHTML = `
+  <div style="border:1px solid #ccc;padding:15px;border-radius:10px;width:300px;margin-top:15px;">
+    <img src="${player.avatar_image}" width="100" style="border-radius:50%;">
+    <h3>${player.nickname}</h3>
+    <p><b>Player ID:</b> ${player.fid}</p>
+    <p><b>State:</b> ${player.kid}</p>
+    <p><b>Furnace Level:</b> ${player.stove_lv}</p>
+    <p><b>Furnace:</b> ${furnaceDisplay}</p>
+  </div>
+`;
     }
   </script>
 </body>
