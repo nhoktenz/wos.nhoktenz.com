@@ -1,15 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WOS Player Lookup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WOS Player Lookup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <h2>WOS Player Lookup</h2>
+  <body class="bg-dark text-light">
 
-  <input id="playerId" placeholder="Enter Player ID" />
-  <button onclick="lookupPlayer()">Submit</button>
+<div class="container py-3 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
 
-  <div id="result"></div>
+            <div class="card bg-secondary shadow-lg">
+                <div class="card-body">
+
+                    <h2 class="text-center mb-4">
+                        Whiteout Survival Player Lookup
+                    </h2>
+
+                    <div class="input-group g-2 mb-3">
+                        <div class="col-12 col-sm-8">
+                           <input
+                            id="playerId"
+                            type="text"
+                            class="form-control"
+                            placeholder="Enter Player ID"                        >
+                        </div>
+                        
+                        <div class="col-12 col-sm-4">
+                            <button
+                                class="btn btn-warning w-100"
+                                onclick="lookupPlayer()"
+                            >
+                                Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="result"></div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
 
   <script>
     async function lookupPlayer() {
@@ -45,14 +83,42 @@
     : player.stove_lv_content || "";
 
    result.innerHTML = `
-  <div style="border:1px solid #ccc;padding:15px;border-radius:10px;width:300px;margin-top:15px;">
-    <img src="${player.avatar_image}" width="100" style="border-radius:50%;">
-    <h3>${player.nickname}</h3>
-    <p><b>Player ID:</b> ${player.fid}</p>
-    <p><b>State:</b> ${player.kid}</p>
-    <p><b>Furnace Level:</b> ${player.stove_lv}</p>
-    <p><b>Furnace:</b> ${furnaceDisplay}</p>
-  </div>
+<div class="card bg-dark text-light border-warning mt-3">
+    <div class="card-body text-center">
+
+        <img
+            src="${player.avatar_image}"
+            class="rounded-circle border border-warning mb-3"
+            width="120"
+            height="120"
+        >
+
+        <h3>${player.nickname}</h3>
+
+        <div class="row mt-4">
+            <div class="col-6">
+                <strong>State</strong>
+                <div>#${player.kid}</div>
+            </div>
+
+            <div class="col-6">
+                <strong>Player ID</strong>
+                <div>${player.fid}</div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div>
+            <strong>Furnace Level</strong>
+            <div class="mt-2">
+                <img src="${player.stove_lv_content}" width="90">
+                <div class="mt-2">Level ${player.stove_lv}</div>
+            </div>
+        </div>
+
+    </div>
+</div>
 `;
     }
   </script>
