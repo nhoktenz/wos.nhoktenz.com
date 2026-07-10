@@ -280,7 +280,27 @@ select:focus {
 }
 
 .result-card.first {
-    background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
+    background: linear-gradient(135deg, #ff7a59 0%, #dc2626 100%);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.28);
+}
+
+.result-card.first .btn-edit,
+.result-card.first .btn-outline-danger,
+.result-card.first .btn-cancel-edit,
+.result-card.first .btn-save-edit {
+    color: #7f1d1d;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+.result-card.first .btn-outline-danger:hover,
+.result-card.first .btn-edit:hover,
+.result-card.first .btn-cancel-edit:hover,
+.result-card.first .btn-save-edit:hover {
+    background: #fff7ed;
+    color: #991b1b;
 }
 
 .result-card h3 {
@@ -302,6 +322,23 @@ select:focus {
     margin-top: 10px;
 }
 
+.result-card .btn-edit,
+.result-card .btn-outline-danger,
+.result-card .btn-cancel-edit,
+.result-card .btn-save-edit {
+    color: #0d47a1;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+.result-card .btn-outline-danger:hover,
+.result-card .btn-edit:hover,
+.result-card .btn-cancel-edit:hover,
+.result-card .btn-save-edit:hover {
+    background: #f8fbff;
+    color: #1565c0;
+}
 
 .result-card .inline-edit-grid {
     margin-top: 10px;
