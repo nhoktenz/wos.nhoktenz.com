@@ -29,12 +29,18 @@ function switchTab(tabName) {
     enemyBtn.classList.toggle('active', !showCoordinator);
 }
 
-function buildLeaderCard(index) {
+function buildLeaderCard(index, showCancel = false) {
     const leaderCard = document.createElement('div');
     leaderCard.className = 'leader-card';
     leaderCard.id = `leader-card-${index}`;
+    const cancelButtonHtml = showCancel
+        ? `<button type="button" onclick="cancelAddedLeader(${index})" class="btn btn-sm btn-outline-secondary">Cancel</button>`
+        : '';
     leaderCard.innerHTML = `
-        <h3>Rally Leader ${index}</h3>
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <h3>Rally Leader ${index}</h3>
+            ${cancelButtonHtml}
+        </div>
         <div class="form-group mb-3">
             <label for="leader${index}Name" class="form-label">Leader Name:</label>
             <input type="text" id="leader${index}Name" class="form-control" placeholder="Enter leader name" required>
@@ -69,13 +75,7 @@ function setupLeaders() {
     document.getElementById('setup-section').classList.add('hidden');
     document.getElementById('leaders-section').classList.remove('hidden');
     
-    // Generate input fields for each leader
-    const leadersInputsDiv = document.getElementById('leadersInputs');
-    leadersInputsDiv.innerHTML = '';
-    
-    for (let i = 1; i <= numLeaders; i++) {
-        leadersInputsDiv.appendChild(buildLeaderCard(i));
-    }
+    renderLeaderInputCards();
 }
 
 function addRallyLeader() {
@@ -88,12 +88,28 @@ function addRallyLeader() {
     document.getElementById('numLeaders').value = numLeaders;
 
     const leadersInputsDiv = document.getElementById('leadersInputs');
-    leadersInputsDiv.appendChild(buildLeaderCard(numLeaders));
+    leadersInputsDiv.appendChild(buildLeaderCard(numLeaders, true));
 
     const newNameInput = document.getElementById(`leader${numLeaders}Name`);
     if (newNameInput) {
         newNameInput.focus();
         newNameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function cancelAddedLeader(index) {
+    const card = document.getElementById(`leader-card-${index}`);
+    if (card) {
+        card.remove();
+    }
+
+    if (numLeaders > 0) {
+        numLeaders = Math.max(numLeaders - 1, 0);
+    }
+
+    const leaderCountInput = document.getElementById('numLeaders');
+    if (leaderCountInput) {
+        leaderCountInput.value = numLeaders;
     }
 }
 
@@ -886,6 +902,58 @@ function renderLeaderStatus() {
     ).join('');
 }
 
+function collectLeaderInputEntries() {
+    const entries = [];
+
+    for (let i = 1; i <= numLeaders; i++) {
+        const nameInput = document.getElementById(`leader${i}Name`);
+        const minutesInput = document.getElementById(`leader${i}Minutes`);
+        const secondsInput = document.getElementById(`leader${i}Seconds`);
+
+        if (!nameInput || !minutesInput || !secondsInput) {
+            continue;
+        }
+
+        entries.push({
+            name: nameInput.value.trim(),
+            minutes: parseInt(minutesInput.value, 10) || 0,
+            seconds: parseInt(secondsInput.value, 10) || 0
+        });
+    }
+
+    return entries;
+}
+
+function renderLeaderInputCards(entries = []) {
+    const leadersInputsDiv = document.getElementById('leadersInputs');
+    if (!leadersInputsDiv) {
+        return;
+    }
+
+    leadersInputsDiv.innerHTML = '';
+
+    for (let i = 1; i <= numLeaders; i++) {
+        leadersInputsDiv.appendChild(buildLeaderCard(i));
+    }
+
+    entries.forEach((entry, index) => {
+        const cardIndex = index + 1;
+        const nameInput = document.getElementById(`leader${cardIndex}Name`);
+        const minutesInput = document.getElementById(`leader${cardIndex}Minutes`);
+        const secondsInput = document.getElementById(`leader${cardIndex}Seconds`);
+
+        if (nameInput) {
+            nameInput.value = entry.name || '';
+        }
+        if (minutesInput) {
+            minutesInput.value = entry.minutes ?? 0;
+        }
+        if (secondsInput) {
+            secondsInput.value = entry.seconds ?? 0;
+        }
+    });
+}
+
 function editLeader(resultIndex) {
     const leader = leaders[resultIndex];
     const resultCard = document.getElementById(`result-card-${resultIndex}`);
@@ -918,9 +986,61 @@ function editLeader(resultIndex) {
         </div>
         <div class="inline-edit-actions">
             <button onclick="saveEditedLeader(${resultIndex})" class="btn btn-save-edit">Save</button>
+            <button onclick="deleteLeader(${resultIndex})" class="btn btn-outline-danger">Delete</button>
             <button onclick="cancelEditedLeader()" class="btn btn-cancel-edit">Cancel</button>
         </div>
     `;
+}
+
+function deleteLeader(resultIndex) {
+    const leader = leaders[resultIndex];
+    if (!leader) {
+        return;
+    }
+
+    const leaderName = leader.name || 'this leader';
+    if (!window.confirm(`Remove ${leaderName} from the rally plan?`)) {
+        return;
+    }
+
+    if (rallyTimer) {
+        cancelCountdown();
+    }
+
+    const inputIndexToRemove = leader.inputIndex;
+    const entries = [];
+
+    for (let i = 1; i <= numLeaders; i++) {
+        if (i === inputIndexToRemove) {
+            continue;
+        }
+
+        const nameInput = document.getElementById(`leader${i}Name`);
+        const minutesInput = document.getElementById(`leader${i}Minutes`);
+        const secondsInput = document.getElementById(`leader${i}Seconds`);
+
+        if (!nameInput || !minutesInput || !secondsInput) {
+            continue;
+        }
+
+        entries.push({
+            name: nameInput.value.trim(),
+            minutes: parseInt(minutesInput.value, 10) || 0,
+            seconds: parseInt(secondsInput.value, 10) || 0
+        });
+    }
+
+    if (entries.length === 0) {
+        numLeaders = 1;
+        renderLeaderInputCards([]);
+        document.getElementById('leaders-section').classList.remove('hidden');
+        document.getElementById('results-section').classList.add('hidden');
+        return;
+    }
+
+    numLeaders = entries.length;
+    renderLeaderInputCards(entries);
+    calculateTiming();
 }
 
 function saveEditedLeader(resultIndex) {
